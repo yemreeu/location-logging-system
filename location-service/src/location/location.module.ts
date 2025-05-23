@@ -1,22 +1,15 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'cache-manager-ioredis';
-import { LocationModule } from './location/location.module';
-import { DatabaseModule } from './database/database.module';
-import { ConfigModule } from '@nestjs/config';
+import { LocationController } from './location.controller';
+import { LocationService } from './location.service';
+import { Location } from './entities/location.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    DatabaseModule,
-    CacheModule.register({
-      store: redisStore,
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
-      ttl: 600, // 10 minutes
-    }),
+    CacheModule.register(),
+    TypeOrmModule.forFeature([Location]),
     ClientsModule.register([
       {
         name: 'AREA_SERVICE',
@@ -41,7 +34,8 @@ import { ConfigModule } from '@nestjs/config';
         },
       },
     ]),
-    LocationModule,
   ],
+  controllers: [LocationController],
+  providers: [LocationService],
 })
-export class AppModule {}
+export class LocationModule {}

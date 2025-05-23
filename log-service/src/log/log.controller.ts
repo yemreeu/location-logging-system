@@ -1,52 +1,52 @@
-import { Controller, Get, Query, Inject } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { EventPattern } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
+import { EventPattern, MessagePattern } from '@nestjs/microservices';
 import { LogService } from './log.service';
 
-@Controller('logs')
+@Controller()
 export class LogController {
   constructor(
     private readonly logService: LogService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  @Get()
-  async findAll(
-    @Query('userId') userId?: string,
-    @Query('areaId') areaId?: string,
-    @Query('limit') limit = 100,
-    @Query('offset') offset = 0,
-  ) {
+  @MessagePattern('get_logs')
+  async handleGetLogs(data: {
+    userId?: string;
+    areaId?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const { userId, areaId, limit = 100, offset = 0 } = data;
     const cacheKey = `logs:${userId || 'all'}:${areaId || 'all'}:${limit}:${offset}`;
     const cached = await this.cacheManager.get(cacheKey);
-    
+
     if (cached) {
       return cached;
     }
 
     const logs = await this.logService.findAll(userId, areaId, limit, offset);
-    await this.cacheManager.set(cacheKey, logs, 300); // 5 minutes
-    
+    await this.cacheManager.set(cacheKey, logs, 300); // 5 dakika cache
     return logs;
   }
 
-  @Get('stats')
-  async getStats(
-    @Query('userId') userId?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
+  @MessagePattern('get_log_stats')
+  async handleGetLogStats(data: {
+    userId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const { userId, startDate, endDate } = data;
     const cacheKey = `log_stats:${userId || 'all'}:${startDate || ''}:${endDate || ''}`;
     const cached = await this.cacheManager.get(cacheKey);
-    
+
     if (cached) {
       return cached;
     }
 
     const stats = await this.logService.getStats(userId, startDate, endDate);
-    await this.cacheManager.set(cacheKey, stats, 600); // 10 minutes
-    
+    await this.cacheManager.set(cacheKey, stats, 600); // 10 dakika cache
     return stats;
   }
 

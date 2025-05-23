@@ -12,8 +12,8 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
 import { AreaService } from './area.service';
-import { CreateAreaDto } from './dto/create-area.dto';
-import { Area } from './entities/area.entity';
+import { CreateAreaDto } from './dto';
+import { Area } from './entities';
 
 @Controller('areas')
 export class AreaController {

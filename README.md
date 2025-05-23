@@ -1,5 +1,3 @@
-# 📍 Martı Test Case
-
 # 📍 Location Logging System
 
 A distributed, event-driven microservice architecture that logs user location data and detects geofence entry events in real time. Built with NestJS, RabbitMQ, PostgreSQL, TypeORM, Redis, and Docker.

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AreaLog } from './entities/area-log.entity';
+import { AreaLog } from './entities';
 
 @Injectable()
 export class LogService {

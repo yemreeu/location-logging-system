@@ -1,12 +1,11 @@
-import { Controller, Post, Body, Get, Query, Inject } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { MessagePattern, ClientProxy } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
+import { ClientProxy, MessagePattern } from '@nestjs/microservices';
 import { LocationService } from './location.service';
 import { CreateLocationDto } from './dto/create.location.dto';
-import { ApiBody } from '@nestjs/swagger';
 
-@Controller('locations')
+@Controller()
 export class LocationController {
   constructor(
     private readonly locationService: LocationService,
@@ -15,32 +14,16 @@ export class LocationController {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  @ApiBody({
-    schema: {
-      example: {
-        userId: '123e4567-e89b-12d3-a456-426614174000',
-        latitude: 41.1612,
-        longitude: 29.0292,
-      },
-    },
-  })
-  @Post()
-  async create(@Body() createLocationDto: CreateLocationDto) {
-    // Save location
+  @MessagePattern('create_location')
+  async handleCreateLocation(createLocationDto: CreateLocationDto) {
     const location = await this.locationService.create(createLocationDto);
-
-    // Check if location is within any predefined areas (async)
     this.checkLocationInAreas(location);
-
     return { success: true, locationId: location.id };
   }
 
-  @Get()
-  async findAll(
-    @Query('userId') userId?: string,
-    @Query('limit') limit = 100,
-    @Query('offset') offset = 0,
-  ) {
+  @MessagePattern('get_locations')
+  async handleGetLocations(data: { userId?: string; limit?: number; offset?: number }) {
+    const { userId, limit = 100, offset = 0 } = data;
     const cacheKey = `locations:${userId}:${limit}:${offset}`;
     const cached = await this.cacheManager.get(cacheKey);
 
@@ -49,14 +32,17 @@ export class LocationController {
     }
 
     const locations = await this.locationService.findAll(userId, limit, offset);
-    await this.cacheManager.set(cacheKey, locations, 300); // 5 minutes
-
+    await this.cacheManager.set(cacheKey, locations, 300); // 5 dakika cache
     return locations;
+  }
+
+  @MessagePattern('get_user_locations')
+  async getUserLocations(data: { userId: string; limit?: number }) {
+    return this.locationService.findAll(data.userId, data.limit);
   }
 
   private async checkLocationInAreas(location: any) {
     try {
-      // Get all areas from Area Service
       const areas = await this.areaClient.send('get_all_areas', {}).toPromise();
 
       for (const area of areas) {
@@ -66,7 +52,6 @@ export class LocationController {
             area.boundaries,
           )
         ) {
-          // Emit event to Log Service
           this.logClient.emit('location_entered_area', {
             userId: location.userId,
             areaId: area.id,
@@ -99,10 +84,5 @@ export class LocationController {
       }
     }
     return false;
-  }
-
-  @MessagePattern('get_user_locations')
-  async getUserLocations(data: { userId: string; limit?: number }) {
-    return this.locationService.findAll(data.userId, data.limit);
   }
 }

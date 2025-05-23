@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { Area } from 'src/area/entities/area.entity';
+import { Area } from '../area/entities';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 

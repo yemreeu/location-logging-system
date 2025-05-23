@@ -3,7 +3,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ClientProxy, MessagePattern } from '@nestjs/microservices';
 import { LocationService } from './location.service';
-import { CreateLocationDto } from './dto/create.location.dto';
+import { CreateLocationDto } from './dto';
 
 @Controller()
 export class LocationController {

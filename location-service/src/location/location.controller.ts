@@ -15,11 +15,6 @@ export class LocationController {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  @Get('test')
-  async test() {
-    return 'hello martı';
-  }
-
   @ApiBody({
     schema: {
       example: {
@@ -71,7 +66,6 @@ export class LocationController {
             area.boundaries,
           )
         ) {
-          console.log('koşula girdi');
           // Emit event to Log Service
           this.logClient.emit('location_entered_area', {
             userId: location.userId,
